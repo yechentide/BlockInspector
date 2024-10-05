@@ -8,7 +8,14 @@ import ArgumentParser
 
 @main
 struct BlockInspector: ParsableCommand {
-    mutating func run() throws {
-        print("Hello, world!")
-    }
+    static let configuration = CommandConfiguration(
+        commandName: "block-inspector",
+        discussion: "A tool to handle data in Minecraft Bedrock's leveldb",
+        version: "0.0.1",
+        shouldDisplay: true,
+        subcommands: [
+            ExtractKey.self,
+            ExtractChunk.self,
+        ]
+    )
 }
