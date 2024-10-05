@@ -1,12 +1,12 @@
 {
-  "originHash" : "93a32a27af56332bdc52873ca1b0522c44f583a7ba28abd7746b53b660df1bef",
+  "originHash" : "8939d9f9501ae4125c0e417e8fcebf7c752afdf165275dc21d3e003b2b3baafe",
   "pins" : [
     {
       "identity" : "corebedrock",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/yechentide/CoreBedrock.git",
       "state" : {
-        "revision" : "9b5cceb8a9a623fcb940ca3f3cf994b5eebdb589"
+        "revision" : "0bcc77c8bfc87bccfbb8c83826b62dac7d19dfaa"
       }
     },
     {
