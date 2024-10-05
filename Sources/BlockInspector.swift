@@ -16,6 +16,7 @@ struct BlockInspector: ParsableCommand {
         subcommands: [
             ExtractKey.self,
             ExtractChunk.self,
+            DecodeNBT.self,
         ]
     )
 }
