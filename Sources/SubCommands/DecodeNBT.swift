@@ -20,6 +20,9 @@ struct DecodeNBT: ParsableCommand {
     @Option(name: .customLong("dst"), help: "Path of the output.")
     var dstFilePath: String
 
+    @Option(name: .customLong("skip"), help: "Skip a specified number of leading bytes.")
+    var skipBytes: Int = 0
+
     func run() throws {
         print("[DecodeNBT] Decoding nbt file \(srcFilePath)")
 
@@ -27,12 +30,16 @@ struct DecodeNBT: ParsableCommand {
         let destURL = URL(fileURLWithPath: dstFilePath)
 
         let nbtData = try Data(contentsOf: srcURL)
-        let stream = CBBuffer(nbtData)
+        let stream = CBBuffer(nbtData[skipBytes...])
         let reader = CBTagReader(stream)
 
         let rootTag = try reader.readAsTag() as! CompoundTag
         try rootTag.description.write(toFile: destURL.path, atomically: true, encoding: .utf8)
 
+        if skipBytes > 0 {
+            let bytesString = nbtData[0..<skipBytes].hexString
+            print("[DecodeNBT] skip leading bytes: \(bytesString)")
+        }
         print("[DecodeNBT] done!\n")
     }
 }
