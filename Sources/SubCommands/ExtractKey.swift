@@ -9,23 +9,27 @@ import CoreBedrock
 struct ExtractKey: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "extract-key",
-        abstract: "extract data using a specified key and save to a file",
-        discussion: "Use this subcommand to extract data using a specified key.",
+        abstract: "Extracts a LevelDB entry by its key and saves the value to a file.",
+        discussion: """
+        Use this subcommand to extract a single value from a LevelDB database using a raw key.
+        The key must be provided as a hexadecimal string.
+        The result will be saved to a file in the specified output directory, named after the key.
+        """,
         shouldDisplay: true
     )
 
-    @Option(name: .customLong("src"), help: "Path of a db directory.")
+    @Option(name: .customLong("src"), help: "Path to the source LevelDB directory.")
     var srcDir: String
 
-    @Option(name: .customLong("dst"), help: "Path where output directory is.")
+    @Option(name: .customLong("dst"), help: "Path to the directory where the output file will be saved.")
     var dstDir: String
 
-    @Option(name: .customLong("key"), help: "A leveldb key, hex string.")
+    @Option(name: .customLong("key"), help: "The LevelDB key (hexadecimal string) to extract.")
     var keyStr: String
 
     func run() throws {
         guard let keyData = keyStr.hexData else {
-            fatalError("[ExtractKey] Error: wrong leveldb key")
+            fatalError("[ExtractKey] Error: invalid LevelDB key (must be a valid hex string): \(keyStr)")
         }
         guard let db = LvDB(dbPath: srcDir) else {
             fatalError("[ExtractKey] Error: can't open db \(srcDir)")
@@ -44,6 +48,6 @@ struct ExtractKey: ParsableCommand {
         let url = URL(fileURLWithPath: dstDir + "/" + keyStr + ".dat")
         try value.write(to: url)
 
-        print("[DecodeNBT] done!\n")
+        print("[ExtractKey] Done!\n")
     }
 }

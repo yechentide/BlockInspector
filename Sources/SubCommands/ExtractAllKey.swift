@@ -66,18 +66,22 @@ extension LvDBKeyType {
 struct ExtractAllKey: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "extract-all-key",
-        abstract: "extract all data and save to files",
-        discussion: "Use this subcommand to extract data stored in the database.",
+        abstract: "Extracts all entries from a LevelDB database and saves them to categorized files.",
+        discussion: """
+        Use this subcommand to extract all entries from a LevelDB-based database (such as Minecraft Bedrock's world data).
+        Each entry is saved into a categorized subdirectory (e.g., chunks, players, maps).
+        If the destination directory already exists, use --override to delete and recreate it.
+        """,
         shouldDisplay: true
     )
 
-    @Option(name: .customLong("src"), help: "Path of a db directory.")
+    @Option(name: .customLong("src"), help: "Path to the source LevelDB directory.")
     var srcDir: String
 
-    @Option(name: .customLong("dst"), help: "Path where output directory is.")
+    @Option(name: .customLong("dst"), help: "Path to the directory where extracted files will be saved.")
     var dstDir: String
 
-    @Flag(name: .customLong("override"), help: "")
+    @Flag(name: .customLong("override"), help: "If set, deletes the destination directory before writing new files.")
     var overrideDir = false
 
     func createSubDirectories(in baseDirURL: URL) throws {
@@ -109,7 +113,7 @@ struct ExtractAllKey: ParsableCommand {
             if overrideDir {
                 try FileManager.default.removeItem(at: rootDirURL)
             } else {
-                fatalError()
+                fatalError("[ExtractAllKey] Error: output directory exists and --override is not set.")
             }
         }
         try FileManager.default.createDirectory(at: rootDirURL, withIntermediateDirectories: true)
@@ -134,6 +138,6 @@ struct ExtractAllKey: ParsableCommand {
             try valueData.write(to: url)
         }
 
-        print("[ExtractAllKey] done!\n")
+        print("[ExtractAllKey] Done!\n")
     }
 }

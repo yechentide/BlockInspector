@@ -9,31 +9,34 @@ import CoreBedrock
 struct DecodeNBT: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "decode-nbt",
-        abstract: "decode nbt data",
-        discussion: "Use this subcommand to decode nbt data and save to a file.",
+        abstract: "Decodes NBT (Named Binary Tag) data from a file.",
+        discussion: """
+        Use this subcommand to decode NBT (Named Binary Tag) data from a binary file.
+        You can specify the number of bytes to skip at the beginning, and choose to either print the result to stdout or write it to a file.
+        """,
         shouldDisplay: true
     )
 
-    @Option(name: .customLong("src"), help: "Path of a nbt data file.")
-    var srcFilePath: String
+    @Option(name: .customLong("src"), help: "Path to the input NBT data file to decode.")
+    var inputFilePath: String
 
-    @Option(name: .customLong("dst"), help: "Path of the output.")
-    var dstFilePath: String? = nil
+    @Option(name: .customLong("dst"), help: "Path where the decoded output will be saved. If omitted, output will be printed to stdout.")
+    var outputFilePath: String? = nil
 
-    @Option(name: .customLong("skip"), help: "Skip a specified number of leading bytes.")
+    @Option(name: .customLong("skip"), help: "Number of bytes to skip from the beginning of the input file (useful for skipping headers).")
     var skipBytes: Int = 0
 
     func run() throws {
-        print("[DecodeNBT] Decoding nbt file \(srcFilePath)")
+        print("[DecodeNBT] Decoding NBT file at: \(inputFilePath)")
 
-        let srcURL = URL(fileURLWithPath: srcFilePath)
+        let srcURL = URL(fileURLWithPath: inputFilePath)
         let nbtData = try Data(contentsOf: srcURL)
         let reader = CBTagReader(data: nbtData[skipBytes...])
         let tags = try reader.readAll()
 
         for rootTag in tags {
-            if let dstFilePath {
-                let destURL = URL(fileURLWithPath: dstFilePath)
+            if let outputFilePath {
+                let destURL = URL(fileURLWithPath: outputFilePath)
                 try rootTag.description.write(toFile: destURL.path, atomically: true, encoding: .utf8)
             } else {
                 print(rootTag.description)
@@ -49,7 +52,7 @@ struct DecodeNBT: ParsableCommand {
             let bytesString = nbtData[offset...].hexString
             print("[DecodeNBT] skip trailing bytes: \(bytesString)")
         }
-        print("[DecodeNBT] parsed \(tags.count) root \(tags.count > 1 ? "tags" : "tag")")
-        print("[DecodeNBT] done!\n")
+        print("[DecodeNBT] Successfully parsed \(tags.count) root \(tags.count > 1 ? "tags" : "tag")")
+        print("[DecodeNBT] Done!\n")
     }
 }

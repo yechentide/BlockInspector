@@ -9,15 +9,18 @@ import CoreBedrock
 struct ListBlockPalette: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "list-block-palette",
-        abstract: "List the block palette in a sub-chunk.",
-        discussion: "Displays the block and water palettes contained in the given sub-chunk.",
+        abstract: "Displays the block and water palettes from a sub-chunk binary file.",
+        discussion: """
+        Parses a Minecraft Bedrock Edition sub-chunk binary file and displays its block and water palettes.
+        Optionally, use --show-blocks to print all block placements in the chunk.
+        """,
         shouldDisplay: true
     )
 
     @Option(name: .customLong("src"), help: "Path to the sub-chunk binary data file.")
     var subChunkFilePath: String
 
-    @Flag(name: .customLong("show-blocks"), help: "Display all blocks in the sub-chunk.")
+    @Flag(name: .customLong("show-blocks"), help: "Also display the 3D block layout within the sub-chunk.")
     var showBlocks = false
 
     func run() throws {
@@ -34,7 +37,9 @@ struct ListBlockPalette: ParsableCommand {
         let storageLayerCount = Int(subChunkData[1])
         let chunkY = subChunkData[2].data.int8
         print("[ListBlockPalette] SubChunk Version = \(storageVersion), Layer Count = \(storageLayerCount), Y Index = \(chunkY)")
-        assert(storageVersion == 9)
+        guard [8, 9].contains(storageVersion) else {
+            fatalError("[ListBlockPalette] Error: Unsupported storage version \(storageVersion). Expected version 9.")
+        }
 
         guard storageLayerCount > 0 else {
             fatalError("[ListBlockPalette] Error: invalid storage layer count \(storageLayerCount).")
@@ -74,11 +79,12 @@ struct ListBlockPalette: ParsableCommand {
                 if let block = subChunk.block(atLocalX: x, localY: y, localZ: z) {
                     print(String(format: "(%2d,%2d,%2d): %@", x, y, z, String(describing: block.type)))
                 } else {
-                    print(String(format: "!!!!!!!!!! (%2d,%2d,%2d): CANNOT FIND BLOCK", x, y, z))
+                    print(String(format: "!!!!!! (%2d,%2d,%2d): Block data missing or corrupted", x, y, z))
                 }
             }
         }
 
+        print()
         print("[ListBlockPalette] Done!\n")
     }
 }

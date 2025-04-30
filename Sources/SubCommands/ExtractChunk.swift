@@ -9,29 +9,33 @@ import CoreBedrock
 struct ExtractChunk: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "extract-chunk",
-        abstract: "extract and save data in a chunk",
-        discussion: "Use this subcommand to extract data from a chunk.",
+        abstract: "Extracts and saves all LevelDB records belonging to a specific chunk.",
+        discussion: """
+        Use this subcommand to extract all records associated with a specific chunk from a LevelDB-based world database.
+        Specify the dimension and chunk coordinates (X, Z). Output will be saved in a uniquely named subdirectory.
+        This is useful for inspecting or debugging individual Minecraft Bedrock chunks.
+        """,
         shouldDisplay: true
     )
 
-    @Option(name: .customLong("src"), help: "Path of a db directory.")
+    @Option(name: .customLong("src"), help: "Path to the source LevelDB directory.")
     var srcDir: String
 
-    @Option(name: .customLong("dst"), help: "Path where output directory is.")
+    @Option(name: .customLong("dst"), help: "Path to the directory where extracted chunk data will be saved.")
     var dstDir: String
 
-    @Option(name: .customShort("d"), help: "World dimension. overworld = 0, theNether = 1, theEnd = 2")
+    @Option(name: .customShort("d"), help: "Dimension ID of the world. 0 = Overworld, 1 = The Nether, 2 = The End.")
     var dimension: Int32
 
-    @Option(name: .customLong("xindex"), help: "X index of a chunk.")
+    @Option(name: .customLong("xindex"), help: "X coordinate of the target chunk.")
     var xIndex: Int32
 
-    @Option(name: .customLong("zindex"), help: "Z index of a chunk.")
+    @Option(name: .customLong("zindex"), help: "Z coordinate of the target chunk.")
     var zIndex: Int32
 
     func run() throws {
         guard let dimension = MCDimension(rawValue: dimension) else {
-            fatalError("[ExtractChunk] Error: wrong dimension")
+            fatalError("[ExtractChunk] Error: Invalid dimension value \(dimension). Expected 0, 1, or 2.")
         }
         guard let db = LvDB(dbPath: srcDir),
               let iterator = db.makeIterator()
@@ -43,7 +47,7 @@ struct ExtractChunk: ParsableCommand {
             db.close()
         }
 
-        print("[ExtractChunk] Extract chunk \(dimension)(\(xIndex), \(zIndex)) from \(srcDir)/db")
+        print("[ExtractChunk] Extracting chunk at \(dimension)(\(xIndex), \(zIndex)) in dimension \(dimension) from \(srcDir)/db")
         print("[ExtractChunk]     to \(dstDir)")
 
         let prefix = (dimension == .overworld) ? xIndex.data + zIndex.data : xIndex.data + zIndex.data + dimension.rawValue.data
@@ -74,7 +78,7 @@ struct ExtractChunk: ParsableCommand {
             print("[ExtractChunk]     Extract: digp \(prefix.hexString)")
         }
 
-        print("[ExtractChunk] done!\n")
+        print("[ExtractChunk] Done!\n")
     }
 
     func outputvalue(db: LvDB, rootDirURL: URL, key: Data) throws {
