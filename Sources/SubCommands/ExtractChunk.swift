@@ -47,14 +47,13 @@ struct ExtractChunk: ParsableCommand {
         print("[ExtractChunk]     to \(dstDir)")
 
         let prefix = (dimension == .overworld) ? xIndex.data + zIndex.data : xIndex.data + zIndex.data + dimension.rawValue.data
-        let start = prefix + Data([MCChunkKeyType.keyTypeStartWith])
+        let start = prefix + Data([LvDBChunkKeyType.keyTypeStartWith])
 
         let rootDirURL = URL(fileURLWithPath: dstDir + "/" + prefix.hexString)
         if FileManager.default.fileExists(atPath: rootDirURL.path) {
             try FileManager.default.removeItem(atPath: rootDirURL.path)
-        } else {
-            try FileManager.default.createDirectory(at: rootDirURL, withIntermediateDirectories: true)
         }
+        try FileManager.default.createDirectory(at: rootDirURL, withIntermediateDirectories: true)
 
         iterator.seek(start)
         while iterator.valid() {
