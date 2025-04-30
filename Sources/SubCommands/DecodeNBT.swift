@@ -18,7 +18,7 @@ struct DecodeNBT: ParsableCommand {
     var srcFilePath: String
 
     @Option(name: .customLong("dst"), help: "Path of the output.")
-    var dstFilePath: String
+    var dstFilePath: String? = nil
 
     @Option(name: .customLong("skip"), help: "Skip a specified number of leading bytes.")
     var skipBytes: Int = 0
@@ -27,19 +27,29 @@ struct DecodeNBT: ParsableCommand {
         print("[DecodeNBT] Decoding nbt file \(srcFilePath)")
 
         let srcURL = URL(fileURLWithPath: srcFilePath)
-        let destURL = URL(fileURLWithPath: dstFilePath)
-
         let nbtData = try Data(contentsOf: srcURL)
-        let stream = CBBuffer(nbtData[skipBytes...])
-        let reader = CBTagReader(stream)
+        let reader = CBTagReader(data: nbtData[skipBytes...])
+        let tags = try reader.readAll()
 
-        let rootTag = try reader.readAsTag() as! CompoundTag
-        try rootTag.description.write(toFile: destURL.path, atomically: true, encoding: .utf8)
+        for rootTag in tags {
+            if let dstFilePath {
+                let destURL = URL(fileURLWithPath: dstFilePath)
+                try rootTag.description.write(toFile: destURL.path, atomically: true, encoding: .utf8)
+            } else {
+                print(rootTag.description)
+            }
+        }
 
         if skipBytes > 0 {
             let bytesString = nbtData[0..<skipBytes].hexString
             print("[DecodeNBT] skip leading bytes: \(bytesString)")
         }
+        if reader.remainingByteCount > 0 {
+            let offset = nbtData.index(-reader.remainingByteCount, offsetBy: nbtData.endIndex)
+            let bytesString = nbtData[offset...].hexString
+            print("[DecodeNBT] skip trailing bytes: \(bytesString)")
+        }
+        print("[DecodeNBT] parsed \(tags.count) root \(tags.count > 1 ? "tags" : "tag")")
         print("[DecodeNBT] done!\n")
     }
 }
