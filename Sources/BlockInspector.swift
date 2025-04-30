@@ -14,6 +14,7 @@ struct BlockInspector: ParsableCommand {
         version: "0.0.1",
         shouldDisplay: true,
         subcommands: [
+            VerifyKeyTypes.self,
             ExtractKey.self,
             ExtractChunk.self,
             ExtractAllKey.self,
