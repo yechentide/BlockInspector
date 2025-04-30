@@ -10,7 +10,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.2.0"),
-        .package(url: "https://github.com/yechentide/CoreBedrock.git", revision: "0bcc77c8bfc87bccfbb8c83826b62dac7d19dfaa"),
+        .package(url: "https://github.com/yechentide/CoreBedrock.git", revision: "f24e53e7fc90dde4ea5dec211cf4cd968b74822c"),
     ],
     targets: [
         .executableTarget(
