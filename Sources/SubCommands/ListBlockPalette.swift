@@ -9,50 +9,76 @@ import CoreBedrock
 struct ListBlockPalette: ParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "list-block-palette",
-        abstract: "list block palette",
-        discussion: "Use this subcommand to list block palette contained in a subChunk.",
+        abstract: "List the block palette in a sub-chunk.",
+        discussion: "Displays the block and water palettes contained in the given sub-chunk.",
         shouldDisplay: true
     )
 
-    @Option(name: .customLong("src"), help: "Path of a subChunk data file.")
-    var srcFilePath: String
+    @Option(name: .customLong("src"), help: "Path to the sub-chunk binary data file.")
+    var subChunkFilePath: String
+
+    @Flag(name: .customLong("show-blocks"), help: "Display all blocks in the sub-chunk.")
+    var showBlocks = false
 
     func run() throws {
-        print("[ListBlockPalette] Decoding subChunk file \(srcFilePath)")
+        print("[ListBlockPalette] Decoding sub-chunk file \(subChunkFilePath)")
 
-        let srcURL = URL(fileURLWithPath: srcFilePath)
+        let srcURL = URL(fileURLWithPath: subChunkFilePath)
         let subChunkData = try Data(contentsOf: srcURL)
 
         guard subChunkData.count >= 3 else {
-            fatalError("[ListBlockPalette] Error: data is too short. (size = \(subChunkData.count))")
+            fatalError("[ListBlockPalette] Error: sub-chunk data is too short. size = \(subChunkData.count) byte(s)")
         }
 
         let storageVersion = subChunkData[0]
         let storageLayerCount = Int(subChunkData[1])
-        let yIndex = subChunkData[2].data.int8
-        print("[ListBlockPalette] SubChunk Version = \(storageVersion), Layer Count = \(storageLayerCount), Y Index = \(yIndex)")
+        let chunkY = subChunkData[2].data.int8
+        print("[ListBlockPalette] SubChunk Version = \(storageVersion), Layer Count = \(storageLayerCount), Y Index = \(chunkY)")
         assert(storageVersion == 9)
 
         guard storageLayerCount > 0 else {
-            fatalError("[ListBlockPalette] Error: invalid layer count \(storageLayerCount).")
+            fatalError("[ListBlockPalette] Error: invalid storage layer count \(storageLayerCount).")
         }
-        guard let layers = try BlockDecoder.shared.decodeV9(data: subChunkData, offset: 3, layerCount: storageLayerCount),
-              layers.count == storageLayerCount
-        else {
-            fatalError("[ListBlockPalette] Error: failed to decode block data.")
+        let parser = BlockDataParser(data: subChunkData, chunkY: chunkY)
+        guard let subChunk = try parser.parse() else {
+            fatalError("[ListBlockPalette] Error: failed to decode block data from sub-chunk.")
         }
 
+        print("========== Info ==========")
+        print("Storage Version: \(storageVersion)")
+        print("Layer Count    : \(storageLayerCount)")
+        print("Chunk Y Index  : \(chunkY)")
+        print()
 
-        for layer in layers {
+        print("========== Block Palette ==========")
+        for palette in subChunk.blockPalette {
+            print(palette.type)
+            print(palette.states)
             print()
-            for palette in layer.palettes {
-                print(palette.name)
-                print(palette.states.description)
-                print()
-            }
-            print("Palette Count: \(layer.palettes.count)")
         }
 
-        print("[ListBlockPalette] done!\n")
+        print("========== Water Palette ==========")
+        for palette in subChunk.waterPalette {
+            print(palette.type)
+            print(palette.states)
+            print()
+        }
+
+        if showBlocks {
+            print("========== ========== ==========")
+            for index in 0..<MCSubChunk.totalBlockCount {
+                let x = index / (MCSubChunk.sideLength * MCSubChunk.sideLength)
+                let z = (index / MCSubChunk.sideLength) % MCSubChunk.sideLength
+                let y = index % MCSubChunk.sideLength
+
+                if let block = subChunk.block(atLocalX: x, localY: y, localZ: z) {
+                    print(String(format: "(%2d,%2d,%2d): %@", x, y, z, String(describing: block.type)))
+                } else {
+                    print(String(format: "!!!!!!!!!! (%2d,%2d,%2d): CANNOT FIND BLOCK", x, y, z))
+                }
+            }
+        }
+
+        print("[ListBlockPalette] Done!\n")
     }
 }
