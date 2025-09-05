@@ -37,11 +37,8 @@ struct ExtractChunk: ParsableCommand {
         guard let dimension = MCDimension(rawValue: dimension) else {
             fatalError("[ExtractChunk] Error: Invalid dimension value \(dimension). Expected 0, 1, or 2.")
         }
-        guard let db = LvDB(dbPath: srcDir),
-              let iterator = db.makeIterator()
-        else {
-            fatalError("[ExtractChunk] Error: can't open db \(srcDir)")
-        }
+        let db = try LvDB(dbPath: srcDir)
+        let iterator = try db.makeIterator()
         defer {
             iterator.destroy()
             db.close()
@@ -68,7 +65,7 @@ struct ExtractChunk: ParsableCommand {
         }
 
         let digp = "digp".data(using: .utf8)! + prefix
-        if let digpData = db.get(digp), digpData.count > 0, digpData.count % 8 == 0 {
+        if let digpData = try? db.get(digp), digpData.count > 0, digpData.count % 8 == 0 {
             for i in 0..<digpData.count/8 {
                 let actorprefix = "actorprefix".data(using: .utf8)! + digpData[i*8...i*8+7]
                 try outputvalue(db: db, rootDirURL: rootDirURL, key: actorprefix)
@@ -82,7 +79,7 @@ struct ExtractChunk: ParsableCommand {
     }
 
     func outputvalue(db: LvDB, rootDirURL: URL, key: Data) throws {
-        if let value = db.get(key) {
+        if let value = try? db.get(key) {
             let dstFileURL = rootDirURL.appendingPathComponent(key.hexString)
             try value.write(to: dstFileURL)
         }

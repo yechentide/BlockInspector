@@ -95,11 +95,8 @@ struct ExtractAllKey: ParsableCommand {
     }
 
     func run() throws {
-        guard let db = LvDB(dbPath: srcDir),
-              let iterator = db.makeIterator()
-        else {
-            fatalError("[ExtractAllKey] Error: can't open db \(srcDir)")
-        }
+        let db = try LvDB(dbPath: srcDir)
+        let iterator = try db.makeIterator()
         defer {
             iterator.destroy()
             db.close()

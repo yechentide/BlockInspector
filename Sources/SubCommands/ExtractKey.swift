@@ -31,15 +31,13 @@ struct ExtractKey: ParsableCommand {
         guard let keyData = keyStr.hexData else {
             fatalError("[ExtractKey] Error: invalid LevelDB key (must be a valid hex string): \(keyStr)")
         }
-        guard let db = LvDB(dbPath: srcDir) else {
-            fatalError("[ExtractKey] Error: can't open db \(srcDir)")
-        }
-        guard let value = db.get(keyData), value.count > 0 else {
-            db.close()
-            fatalError("[ExtractKey] Error: data not found. key=\(keyStr)")
-        }
+        let db = try LvDB(dbPath: srcDir)
         defer {
             db.close()
+        }
+        let value = try db.get(keyData)
+        guard value.count > 0 else {
+            fatalError("[ExtractKey] Error: data not found. key=\(keyStr)")
         }
 
         print("[ExtractKey] Extract data from \(srcDir)")

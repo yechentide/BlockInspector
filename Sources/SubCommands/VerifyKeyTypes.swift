@@ -18,11 +18,8 @@ struct VerifyKeyTypes: ParsableCommand {
     var srcDir: String
 
     func run() throws {
-        guard let db = LvDB(dbPath: srcDir),
-              let iterator = db.makeIterator()
-        else {
-            fatalError("[VerifyKeyTypes] Error: can't open db \(srcDir)")
-        }
+        let db = try LvDB(dbPath: srcDir)
+        let iterator = try db.makeIterator()
         defer {
             iterator.destroy()
             db.close()
