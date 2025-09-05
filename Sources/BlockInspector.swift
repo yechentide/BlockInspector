@@ -19,7 +19,7 @@ struct BlockInspector: ParsableCommand {
             ExtractChunk.self,
             ExtractAllKey.self,
             DecodeNBT.self,
-            ListBlockPalette.self,
+//            ListBlockPalette.self,
         ]
     )
 }
